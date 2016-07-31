@@ -1,13 +1,14 @@
 package com.examle.android.justjava;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
-
-import java.text.NumberFormat;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,15 +32,33 @@ public class MainActivity extends AppCompatActivity {
 
         int price = calculatePrice(statusChocolate, statusWhippedCream);
         String summary = createOrderSummary(price, statusWhippedCream, statusChocolate, name);
-        displayMessage(summary);
+        composeEmail(getString(R.string.order_summary_email_subject, name), summary);
+    }
+
+    private void composeEmail(String subject, String message){
+        Intent intent = new Intent(Intent.ACTION_SENDTO);
+        intent.setData(Uri.parse("mailto:"));
+        intent.putExtra(Intent.EXTRA_SUBJECT,subject);
+        intent.putExtra(Intent.EXTRA_TEXT, message);
+        if ( intent.resolveActivity(getPackageManager()) != null){
+            startActivity(intent);
+        }
     }
 
     public void increment(View view) {
+        if ( quantity >= 100){
+            Toast.makeText(MainActivity.this, getText(R.string.validation_quantity), Toast.LENGTH_SHORT).show();
+            return;
+        }
         quantity++;
         displayQuantity(quantity);
     }
 
     public void decrement(View view) {
+        if  ( quantity <= 0 ){
+            Toast.makeText(MainActivity.this, getText(R.string.validation_quantity), Toast.LENGTH_SHORT).show();
+            return;
+        }
         quantity--;
         displayQuantity(quantity);
     }
@@ -52,17 +71,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String createOrderSummary(int price, boolean whippedCream, boolean chocolate, String name){
-
-       return "Name: "+name+"\nAdd whipped cream? "+whippedCream+"\nQuantity: "+quantity+"\nTotal: $"+price+"\n Thank u!";
+        String summaryText = getString(R.string.order_summary_name, name);
+        summaryText+= "\n" + getString(R.string.order_summary_whipped_cream,whippedCream);
+        summaryText+= "\n" + getString(R.string.order_summary_chocolate,chocolate);
+        summaryText+= "\n" + getString(R.string.order_quantity,quantity);
+        summaryText+= "\n" + getString(R.string.order_price, price);
+        return summaryText;
     }
+
     private void displayQuantity(int number) {
        TextView quantityTextView = (TextView) findViewById(R.id.quantity_text_view);
        quantityTextView.setText(""+quantity);
-    }
-
-
-    private void displayMessage(String message) {
-        TextView orderSummaryTextView = (TextView) findViewById(R.id.order_summary_text_view);
-        orderSummaryTextView.setText(message);
     }
 }
